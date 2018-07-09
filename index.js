@@ -1,49 +1,50 @@
-serializer = {
-    mapping: null
-}
+function serializer(mapping) {
 
-serializer.useMapping = (mapping) => {
-    serializer.mapping = mapping
-}
+    this.mapping = mapping
 
-serializer.item = (item) => {
+    this.setMapping = (mapping) => {
+        this.mapping = mapping
+    }
 
-    const data = serializer.mapping.transform(item)
+    this.item = (item) => {
 
-    if (serializer.mapping.defaultIncludes) {
-        const includes = serializer.mapping.defaultIncludes.split(',')
+        const data = this.mapping.transform(item)
 
-        includes.forEach((include) => {
-            data[include] = serializer.mapping['include' + include.replace(/^\w/, c => c.toUpperCase())](item)
+        if (this.mapping.defaultIncludes) {
+            const includes = this.mapping.defaultIncludes.split(',')
+
+            includes.forEach((include) => {
+                data[include] = this.mapping['include' + include.replace(/^\w/, c => c.toUpperCase())](item)
+            })
+        }
+
+        return data
+    }
+
+
+    this.transformItem = (item, meta) => {
+
+        return {
+            'data': this.item(item),
+            'meta': meta
+        }
+    }
+
+    this.transformCollection = (collection, meta, pagination) => {
+
+        const formattedCollection = []
+        collection.forEach((item) => {
+            console.log(this.item(item))
+            formattedCollection.push(this.item(item))
         })
-    }
 
-    return data
-}
-
-serializer.transformItem = (item, meta) => {
-
-    return {
-        'data': serializer.item(item),
-        'meta': meta
+        return {
+            'data': formattedCollection,
+            'meta': meta
+        }
     }
 }
 
-serializer.transformCollection = (collection, meta, pagination) => {
-
-    const formattedCollection = []
-    collection.forEach((item) => {
-        console.log(serializer.item(item))
-        formattedCollection.push(serializer.item(item))
-    })
-
-    return {
-        'data': formattedCollection,
-        'meta': meta
-    }
-}
-
-
-module.exports = () => {
-    return new serializer
+module.exports = (mapping) => {
+    return new serializer(mapping)
 }
