@@ -1,17 +1,40 @@
-const serializer = {
+serializer = {
     mapping: null
 }
 
 serializer.useMapping = (mapping) => {
-    this.mapping = mapping
-    return serializer
+    serializer.mapping = mapping
+}
+
+serializer.item = (item) => {
+
+    const data = serializer.mapping.transform(item)
+
+    if (serializer.mapping.defaultIncludes) {
+        const includes = serializer.mapping.defaultIncludes.split(',')
+
+        includes.forEach((include) => {
+            data[include] = serializer.mapping['include' + include.replace(/^\w/, c => c.toUpperCase())](item)
+        })
+    }
+
+    return data
+}
+
+serializer.transformItem = (item, meta) => {
+
+    return {
+        'data': serializer.item(item),
+        'meta': meta
+    }
 }
 
 serializer.transformCollection = (collection, meta, pagination) => {
 
     const formattedCollection = []
     collection.forEach((item) => {
-        formattedCollection.push(this.mapping.transform(item))
+        console.log(serializer.item(item))
+        formattedCollection.push(serializer.item(item))
     })
 
     return {
@@ -20,23 +43,7 @@ serializer.transformCollection = (collection, meta, pagination) => {
     }
 }
 
-serializer.transformItem = (item, meta) => {
 
-    const data = this.mapping.transform(item)
-
-    if (this.mapping.defaultIncludes) {
-        const includes = this.mapping.defaultIncludes.split(',')
-
-        includes.forEach((include) => {
-            
-            data[include] = this.mapping['include' + include.replace(/^\w/, c => c.toUpperCase()) ](item)
-        })
-    }
-
-    return {
-        'data': data,
-        'meta': meta
-    }
+module.exports = () => {
+    return new serializer
 }
-
-module.exports = serializer
