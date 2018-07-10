@@ -8,13 +8,23 @@ function serializer(mapping) {
         var requestIncludes = (req.query.includes || req.query.include || req.query.with || '').split(',')
         var requestExcludes = (req.query.excludes || req.query.exclude || req.query.without || '').split(',')
 
-        if (this.mapping.availableIncludes) {
+        requestIncludes.forEach((requestInclude) => {
 
-            var filteredAvailableIncludes = this.mapping.availableIncludes.split(',').filter((availableIncludeString) => {
-                return requestIncludes.includes(availableIncludeString)
-            })
-            includes = includes.concat(filteredAvailableIncludes)
-        }
+            var splittedInclude = requestInclude.split('.')
+
+            if (splittedInclude[1] != undefined) {
+
+                var obj = {}
+                function index(obj,i) {return obj[i]}
+                splittedInclude.reduce(index, obj)
+                includes.push(requestInclude)
+                includes[requestInclude] = obj
+
+            } else {
+
+                includes.push(requestInclude)
+            }
+        })
 
         if (requestExcludes.length >= 1) {
             includes = includes.filter((include) => {
@@ -22,26 +32,31 @@ function serializer(mapping) {
             })
         }
 
+        console.log(includes)
         return includes
 
     }
 
     this.item = (item, includes) => {
-        
-        console.log(this.mapping)
-        console.log(item)
+
         const data = this.mapping.transform(item)
 
-        (includes || []).forEach((include) => {
+        if (Array.isArray(includes)) {
 
-            const includeFunctionName = 'include' + include.replace(/^\w/, c => c.toUpperCase())
+            includes.forEach((include) => {
 
-            if (typeof this.mapping[includeFunctionName] != 'function') {
-                throw new Error(includeFunctionName + ' is not defined in transformer')
-            }
+                const includeFunctionName = 'include' + include.replace(/^\w/, c => c.toUpperCase())
 
-            data[include] = this.mapping[includeFunctionName](item)
-        })
+                console.log(includeFunctionName)
+                if (typeof this.mapping[includeFunctionName] != 'function') {
+                    throw new Error(includeFunctionName + ' is not defined in transformer')
+                }
+
+                // asdfasdf
+
+                data[include] = this.mapping[includeFunctionName](item)
+            })
+        }
 
         return data
     }
