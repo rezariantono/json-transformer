@@ -1,58 +1,38 @@
 function serializer(mapping) {
 
     this.mapping = mapping
-    this.requestIncludes = []
-    this.requestExcludes = []
 
-    this.middleware = (req, res, next) => {
-        
-        this.requestIncludes.push((req.query.includes || req.query.include || req.query.with || '').split(','))
-        this.requestExcludes.push((req.query.excludes || req.query.exclude || req.query.without || '').split(','))
-        next()
-    }
+    this.getIncludes = (req) => {
 
-    this.setMapping = (mapping) => {
-        this.mapping = mapping
-    }
-
-    this.getIncludes = () => {
-
-        var includes = []
-
-        if (this.mapping.defaultIncludes) {
-            includes = includes.concat(this.mapping.defaultIncludes.split(','))
-        }
+        var includes = (this.mapping.defaultIncludes || '').split(',')
+        var requestIncludes = (req.query.includes || req.query.include || req.query.with || '').split(',')
+        var requestExcludes = (req.query.excludes || req.query.exclude || req.query.without || '').split(',')
 
         if (this.mapping.availableIncludes) {
 
             var filteredAvailableIncludes = this.mapping.availableIncludes.split(',').filter((availableIncludeString) => {
-                return this.requestIncludes.includes(availableIncludeString)
+                return requestIncludes.includes(availableIncludeString)
             })
             includes = includes.concat(filteredAvailableIncludes)
         }
 
-        console.log(includes)
-
-        if (this.requestExcludes.length >= 1) {
+        if (requestExcludes.length >= 1) {
             includes = includes.filter((include) => {
-                return !this.requestExcludes.includes(include)
+                return !requestExcludes.includes(include)
             })
         }
-
-        console.log(includes)
-        console.log(this.requestExcludes)
 
         return includes
 
     }
 
-    this.item = (item) => {
-
+    this.item = (item, includes) => {
+        
+        console.log(this.mapping)
+        console.log(item)
         const data = this.mapping.transform(item)
 
-        const includes = this.getIncludes()
-
-        includes.forEach((include) => {
+        (includes || []).forEach((include) => {
 
             const includeFunctionName = 'include' + include.replace(/^\w/, c => c.toUpperCase())
 
@@ -66,20 +46,24 @@ function serializer(mapping) {
         return data
     }
 
-    this.transformItem = (item, meta) => {
+    this.transformItem = (item, meta, req) => {
+
+        const includes = this.getIncludes(req)
 
         return {
-            'data': this.item(item),
+            'data': this.item(item, includes),
             'meta': meta
         }
     }
 
-    this.transformCollection = (collection, meta, pagination) => {
+    this.transformCollection = (collection, meta, req, pagination) => {
+
+        const includes = this.getIncludes(req)
 
         const formattedCollection = []
         collection.forEach((item) => {
             console.log(this.item(item))
-            formattedCollection.push(this.item(item))
+            formattedCollection.push(this.item(item, includes))
         })
 
         return {
