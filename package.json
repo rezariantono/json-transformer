@@ -1,5 +1,5 @@
 {
-  "name": "json-transformer",
+  "name": "@rezariantono/json-transformer",
   "version": "0.0.1",
   "description": "Format and standardize JSON response",
   "main": "\t",
