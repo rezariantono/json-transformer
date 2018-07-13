@@ -2,9 +2,46 @@ function serializer(mapping) {
 
     this.mapping = mapping
 
+    const parseInclude = (includeString) => {
+
+        var object = {}
+        
+        includeString.split(',').forEach((inclString) => {
+
+            var reduced = inclString.split('.').reduce((accumulator, currentValue, index) => {
+                
+                return {}
+            })
+
+            object[inclString] = reduced
+        })
+
+        const getSubObjectFromString = (string) => {
+
+            var tempObject = {}
+
+            return tempObject
+        }
+
+        var objects = getSubObjectFromString(includeString)
+
+        console.log(objects)
+
+
+    }
+
     this.getIncludes = (req) => {
 
-        var includes = (this.mapping.defaultIncludes || '').split(',')
+        if (this.mapping.defaultIncludes) {
+            parseInclude(this.mapping.defaultIncludes)
+        }
+
+        var queryIncludes = (req.query.includes || req.query.include || req.query.with || false)
+        if (queryIncludes) {
+            parseInclude(queryIncludes)
+        }
+
+        // var includes = (this.mapping.defaultIncludes || '').split(',')
         var requestIncludes = (req.query.includes || req.query.include || req.query.with || '').split(',')
         var requestExcludes = (req.query.excludes || req.query.exclude || req.query.without || '').split(',')
 
@@ -15,7 +52,7 @@ function serializer(mapping) {
             if (splittedInclude[1] != undefined) {
 
                 var obj = {}
-                function index(obj,i) {return obj[i]}
+                function index(obj, i) { return obj[i] }
                 splittedInclude.reduce(index, obj)
                 includes.push(requestInclude)
                 includes[requestInclude] = obj
