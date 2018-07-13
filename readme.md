@@ -13,7 +13,7 @@ Data format:
 ```JSONasPerl
 {
     "price": {
-        "otherPrices" // Provide object name for further includes and excludes
+        "otherPrices": {} // Provide object name for further includes and excludes
     },
     "purchaseHistory": {} // Provide empty object if not further includes or excludes is expected 
 }
