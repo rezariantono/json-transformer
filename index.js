@@ -4,74 +4,56 @@ function serializer(mapping) {
 
     const parseInclude = (includeString) => {
 
-        var object = {}
-        
-        includeString.split(',').forEach((inclString) => {
+        const reduce = (x, initialValue) => {
+            return x.split('.').reduce((accumulator, val, index) => {
+                if (index < 1 && val != '') {
+                    var xArray = x.split('.')
+                    xArray.shift()
+                    if (xArray.length == 0) {
+                        accumulator[val] = {}
+                    } else {
+                        accumulator[val] = reduce(xArray.join('.'))
+                    }
+                }
 
-            var reduced = inclString.split('.').reduce((accumulator, currentValue, index) => {
-                
-                return {}
-            })
 
-            object[inclString] = reduced
-        })
-
-        const getSubObjectFromString = (string) => {
-
-            var tempObject = {}
-
-            return tempObject
+                return accumulator
+            }, (initialValue == undefined ? {} : initialValue))
         }
 
-        var objects = getSubObjectFromString(includeString)
+        var object = includeString.split(',').reduce((accumulator, val, index) => {
 
-        console.log(objects)
+            var contentArray = val.split('.')
+            contentArray.shift()
+            accumulator[val.split('.')[0]] = reduce(contentArray.join('.'), accumulator[val.split('.')[0]])
+            return accumulator
+        }, {})
 
-
+        return object
     }
 
     this.getIncludes = (req) => {
 
+        var includes = {}
+
         if (this.mapping.defaultIncludes) {
-            parseInclude(this.mapping.defaultIncludes)
+            Object.assign(includes, parseInclude(this.mapping.defaultIncludes))
         }
 
         var queryIncludes = (req.query.includes || req.query.include || req.query.with || false)
         if (queryIncludes) {
-            parseInclude(queryIncludes)
+            Object.assign(includes, parseInclude(queryIncludes))
         }
 
-        // var includes = (this.mapping.defaultIncludes || '').split(',')
-        var requestIncludes = (req.query.includes || req.query.include || req.query.with || '').split(',')
-        var requestExcludes = (req.query.excludes || req.query.exclude || req.query.without || '').split(',')
+        var queryExcludes = (req.query.excludes || req.query.exclude || req.query.without || '').split(',')
 
-        requestIncludes.forEach((requestInclude) => {
-
-            var splittedInclude = requestInclude.split('.')
-
-            if (splittedInclude[1] != undefined) {
-
-                var obj = {}
-                function index(obj, i) { return obj[i] }
-                splittedInclude.reduce(index, obj)
-                includes.push(requestInclude)
-                includes[requestInclude] = obj
-
-            } else {
-
-                includes.push(requestInclude)
+        queryExcludes.forEach((queryExclude) => {
+            if (includes[queryExclude.split('.')[0]] != undefined) {
+                delete includes[queryExclude.split('.')[0]]
             }
         })
 
-        if (requestExcludes.length >= 1) {
-            includes = includes.filter((include) => {
-                return !requestExcludes.includes(include)
-            })
-        }
-
-        console.log(includes)
         return includes
-
     }
 
     this.item = (item, includes) => {
