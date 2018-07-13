@@ -3,10 +3,16 @@
 
 Create standardize JSON response output from your REST API by mapping object properties to json
 
-## Internal Documentation
+## Usage Documentation
+
+
+
+
+## Developer Documentation
+
+Khusus developer package ini saja. Jika Anda user, tidak perlu memikirkan bagian selanjut
 
 ### Includes and excludes parsing
-
 
 Data format:
 

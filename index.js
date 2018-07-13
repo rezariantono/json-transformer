@@ -60,24 +60,27 @@ function serializer(mapping) {
 
         const data = this.mapping.transform(item)
 
-        if (Array.isArray(includes)) {
+        for (var includeKey in includes) {
 
-            includes.forEach((include) => {
+            const includeFunctionName = 'include' + includeKey.replace(/^\w/, c => c.toUpperCase())
+            if (typeof this.mapping[includeFunctionName] != 'function') {
+                throw new Error(includeFunctionName + ' is not defined in transformer')
+            }
 
-                const includeFunctionName = 'include' + include.replace(/^\w/, c => c.toUpperCase())
-
-                console.log(includeFunctionName)
-                if (typeof this.mapping[includeFunctionName] != 'function') {
-                    throw new Error(includeFunctionName + ' is not defined in transformer')
-                }
-
-                // asdfasdf
-
-                data[include] = this.mapping[includeFunctionName](item)
-            })
+            data[includeKey] = this.mapping[includeFunctionName](item, includes[includeKey])
         }
 
         return data
+    }
+
+    this.collection = (collection, includes) => {
+
+        const formattedCollection = []
+        collection.forEach((item) => {
+            formattedCollection.push(this.item(item, includes))
+        })
+
+        return formattedCollection
     }
 
     this.transformItem = (item, meta, req) => {
@@ -94,14 +97,8 @@ function serializer(mapping) {
 
         const includes = this.getIncludes(req)
 
-        const formattedCollection = []
-        collection.forEach((item) => {
-            console.log(this.item(item))
-            formattedCollection.push(this.item(item, includes))
-        })
-
         return {
-            'data': formattedCollection,
+            'data': this.collection(collection, includes),
             'meta': meta
         }
     }
