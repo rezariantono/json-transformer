@@ -39,8 +39,44 @@ module.exports = {
 } 
 ```
  2.  Update schema.js
+3. Pagination
+Contoh Controller yang menggunakan pagination
+```javascript
+index: async (req, res) => {
 
+        const queryParams = itemModel.queryBuilder(req)
+        const query = itemModel.model(req.db.tenant.mongo.connection).find(queryParams)
 
+        if (req.query.paginate) {
+            query
+                .skip(_.toInteger((req.query.page * req.query.paginate) - 1))
+                .limit(_.toInteger(req.query.paginate))
+        }
+        try {
+            const results = await query.exec()
+            const pagination = {
+                'type': 'cursor', // dapat diisi cursor / paginator
+                'count': req.query.paginate, // total data yang ditampilkan per page
+                'current': (req.query.page - 1) * req.query.paginate + 1
+            }
+
+            if(pagination.type == 'paginator'){
+                const count = await itemModel.model(req.db.tenant.mongo.connection).find({}).exec() 
+                
+                const total = {
+                    'total': count.length
+                }
+
+                Object.assign(pagination, total)
+            }
+            
+            return res.json(serializer.transformCollection(results, {}, req,pagination ))
+
+        } catch (err) {
+            return res.status(400).json(err)
+        }
+    },
+```
   
   
   

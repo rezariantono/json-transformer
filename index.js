@@ -37,6 +37,7 @@ function serializer(mapping) {
         var includes = {}
 
         if (this.mapping.defaultIncludes) {
+
             Object.assign(includes, parseInclude(this.mapping.defaultIncludes))
         }
 
@@ -96,6 +97,22 @@ function serializer(mapping) {
     this.transformCollection = (collection, meta, req, pagination) => {
 
         const includes = this.getIncludes(req)
+
+        const paginate = (pagination) => {
+            
+            return {
+                'pagination': {
+                    'type' : pagination.type,
+                    'total' : pagination.total ? pagination.total : null ,
+                    'current_page': pagination.current,
+                    'per_page': pagination.count
+                }
+            }
+        }
+
+        if(pagination){
+           Object.assign(meta, paginate(pagination))
+        }
 
         return {
             'data': this.collection(collection, includes),
