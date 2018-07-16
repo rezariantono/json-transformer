@@ -54,17 +54,20 @@ index: async (req, res) => {
         }
         try {
             const results = await query.exec()
-            const pagination = {
-                'type': 'cursor', // dapat diisi cursor / paginator
-                'count': req.query.paginate, // total data yang ditampilkan per page
-                'current': (req.query.page - 1) * req.query.paginate + 1
+             const pagination = {
+                'type': 'paginator', // dapat diisi cursor / paginator
+                'count': req.query.paginate,// total data yang ditampilkan per page
+                'current_page': req.query.page,  // page yang sedang ditampilkan
+                'current_data': (req.query.page -1) * req.query.paginate + 1 // data yang dimulai ditampilkan di page tersebut
             }
 
             if(pagination.type == 'paginator'){
-                const count = await itemModel.model(req.db.tenant.mongo.connection).find({}).exec() 
+                
+                const count = await itemModel.model(req.db.tenant.mongo.connection).find({}).exec()
                 
                 const total = {
-                    'total': count.length
+                    'total': count.length, // total data keseluruhan
+                    'total_pages': (count.length / req.query.paginate) // total page keseluruhan
                 }
 
                 Object.assign(pagination, total)

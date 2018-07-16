@@ -101,11 +101,13 @@ function serializer(mapping) {
         const paginate = (pagination) => {
             
             return {
-                'pagination': {
+                 'pagination': {
                     'type' : pagination.type,
+                    'current_page': pagination.current_page,
+                    'current_data': pagination.current_data,
+                    'per_page': pagination.count,
                     'total' : pagination.total ? pagination.total : null ,
-                    'current_page': pagination.current,
-                    'per_page': pagination.count
+                    'total_pages': pagination.total_pages ?  Math.round(pagination.total_pages) : null 
                 }
             }
         }
