@@ -1,4 +1,5 @@
 
+
   
 
   
@@ -78,75 +79,32 @@ return  priceTransfomer.item(item.price, includes)
 Contoh Controller yang menggunakan pagination
 
 ```javascript
+ index: async (req, res) => {
 
-index: async (req, res) => {
+        const queryParams = itemModel.queryBuilder(req)
+        const query = itemModel.model(req.db.tenant.mongo.connection).find(queryParams)
 
-  
+        if (req.query.paginate) {
+            query.skip(_.toInteger((req.query.page -1) * req.query.paginate)).limit(_.toInteger(req.query.paginate))
+        }
 
-const  queryParams = itemModel.queryBuilder(req)
+        try {
+           
+            const results = await query.exec()
+            
+            const pagination = {
+                'type':'cursor', // optional dapat diisi dengan cursor / paginator atau dikosongkan
+                'total':  await itemModel.model(req.db.tenant.mongo.connection).count({}).exec(), // optional ,  total keseluruhan data
+                'paginate': req.query.paginate, // jumlah data yang ditampilkan per page
+                'page': req.query.page // page yang sedang ditampilkan
+            }
 
-const  query = itemModel.model(req.db.tenant.mongo.connection).find(queryParams)
+            return res.json(serializer.transformCollection(results, {}, req,pagination ))  
 
-  
-
-if (req.query.paginate) {
-
-query
-
-.skip(_.toInteger((req.query.page * req.query.paginate) - 1))
-
-.limit(_.toInteger(req.query.paginate))
-
-}
-
-try {
-
-const  results = await  query.exec()
-
-const  pagination = {
-
-'type':  'paginator', // dapat diisi cursor / paginator
-
-'count':  req.query.paginate,// total data yang ditampilkan per page
-
-'current_page':  req.query.page, // page yang sedang ditampilkan
-
-'current_data': (req.query.page -1) * req.query.paginate + 1  // data yang dimulai ditampilkan di page tersebut
-
-}
-
-  
-
-if(pagination.type == 'paginator'){
-
-const  count = await  itemModel.model(req.db.tenant.mongo.connection).find({}).exec()
-
-const  total = {
-
-'total':  count.length, // total data keseluruhan
-
-'total_pages': (count.length / req.query.paginate) // total page keseluruhan
-
-}
-
-  
-
-Object.assign(pagination, total)
-
-}
-
-return  res.json(serializer.transformCollection(results, {}, req,pagination ))
-
-  
-
-} catch (err) {
-
-return  res.status(400).json(err)
-
-}
-
-},
-
+        } catch (err) {
+            return res.status(400).json(err)
+        }
+    },
 ```
 
   
@@ -200,12 +158,31 @@ Parser akan mengeluarkan data dengan format sepert ini:
 ```javascript
 
 {
-	"type": pagination.type || (pagination.total.isNaN() ? "cursor" : "paginator"), // optional,
-	"count": (pagination.paginate || pagination.per_page),
-	"per_page": (pagination.paginate || pagination.per_page),
-	"current_page": (pagination.page || pagination.current_page),
-	"total": (int) pagination.total, // optional, provide if the type is paginator
-	"total_pages": (pagination.total / pagination.paginate)
+    "type": pagination.type || (isNaN(pagination.total) ? "cursor" : "paginator"), // optional,
+    "count": collection.length,
+    "per_page": parseInt(pagination.count || pagination.per_page || pagination.paginate),
+    "current_page": parseInt(pagination.page || pagination.current_page || 1),
+    "total": (int) pagination.total, // optional, provide if the type is paginator
+    "total_pages":  Math.ceil(paginationObject.total / paginationObject.per_page)
 }
-
 ```
+### Pagination cursor type output
+```json
+ {
+        "type": "cursor",
+        "per_page": 20,
+        "count": 10,
+        "current_page": 3
+    }
+ ```
+ ### Pagination paginator type ouput
+ ```json
+ {
+        "type": "paginator",
+        "per_page": 20,
+        "count": 10,
+        "current_page": 3,
+        "total": 50,
+        "total_pages": 3
+    }
+    ``

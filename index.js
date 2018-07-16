@@ -58,7 +58,7 @@ function serializer(mapping) {
     }
 
     this.getPagination = (pagination, collection) => {
-
+        
         var paginationObject = {
             type: pagination.type || (isNaN(pagination.total) ? "cursor" : "paginator"),
             per_page: parseInt(pagination.count || pagination.per_page || pagination.paginate),
