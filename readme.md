@@ -1,4 +1,5 @@
 
+
   
 
   
@@ -157,12 +158,31 @@ Parser akan mengeluarkan data dengan format sepert ini:
 ```javascript
 
 {
-	"type": pagination.type || (isNaN(pagination.total) ? "cursor" : "paginator"), // optional,
-	"count": collection.length,
-	"per_page": parseInt(pagination.count || pagination.per_page || pagination.paginate),
-	"current_page": parseInt(pagination.page || pagination.current_page || 1),
-	"total": (int) pagination.total, // optional, provide if the type is paginator
-	"total_pages":  Math.ceil(paginationObject.total / paginationObject.per_page)
+    "type": pagination.type || (isNaN(pagination.total) ? "cursor" : "paginator"), // optional,
+    "count": collection.length,
+    "per_page": parseInt(pagination.count || pagination.per_page || pagination.paginate),
+    "current_page": parseInt(pagination.page || pagination.current_page || 1),
+    "total": (int) pagination.total, // optional, provide if the type is paginator
+    "total_pages":  Math.ceil(paginationObject.total / paginationObject.per_page)
 }
-
 ```
+### Pagination cursor type output
+```json
+ {
+        "type": "cursor",
+        "per_page": 20,
+        "count": 10,
+        "current_page": 3
+    }
+ ```
+ ### Pagination paginator type ouput
+ ```json
+ {
+        "type": "paginator",
+        "per_page": 20,
+        "count": 10,
+        "current_page": 3,
+        "total": 50,
+        "total_pages": 3
+    }
+    ``
