@@ -92,7 +92,7 @@ Contoh Controller yang menggunakan pagination
             const results = await query.exec()
             
             const pagination = {
-                'type':'cursor', // optional dapat diisi dengan cursor / paginator 
+                'type':'cursor', // optional dapat diisi dengan cursor / paginator atau dikosongkan
                 'total':  await itemModel.model(req.db.tenant.mongo.connection).count({}).exec(), // optional ,  total keseluruhan data
                 'paginate': req.query.paginate, // jumlah data yang ditampilkan per page
                 'page': req.query.page // page yang sedang ditampilkan
