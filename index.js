@@ -57,6 +57,23 @@ function serializer(mapping) {
         return includes
     }
 
+    this.getPagination = (pagination, collection) => {
+
+        var paginationObject = {
+            type: pagination.type || (isNaN(pagination.total) ? "cursor" : "paginator"),
+            per_page: parseInt(pagination.count || pagination.per_page || pagination.paginate),
+            count: collection.length,
+            current_page: parseInt(pagination.page || pagination.current_page || 1),
+        }
+
+        if (paginationObject.type == 'paginator') {
+            paginationObject.total = parseInt(pagination.total)
+            paginationObject.total_pages = Math.ceil(paginationObject.total / paginationObject.per_page)
+        }
+
+        return paginationObject
+    }
+
     this.item = (item, includes) => {
 
         const data = this.mapping.transform(item)
@@ -98,22 +115,8 @@ function serializer(mapping) {
 
         const includes = this.getIncludes(req)
 
-        const paginate = (pagination) => {
-            
-            return {
-                 'pagination': {
-                    'type' : pagination.type,
-                    'current_page': pagination.current_page,
-                    'current_data': pagination.current_data,
-                    'per_page': pagination.count,
-                    'total' : pagination.total ? pagination.total : null ,
-                    'total_pages': pagination.total_pages ?  Math.round(pagination.total_pages) : null 
-                }
-            }
-        }
-
-        if(pagination){
-           Object.assign(meta, paginate(pagination))
+        if (pagination) {
+            Object.assign(meta, this.getPagination(pagination, collection))
         }
 
         return {
